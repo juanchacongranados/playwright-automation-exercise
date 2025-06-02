@@ -32,21 +32,32 @@ test.describe('Flujo de compra en automationexercise.com', () => {
     const qtyValue = await page.inputValue(productDetailPage.quantityInput);
     expect(Number(qtyValue)).toBe(randomQty);
 
-    // 6. Paso 5: Agregar al carrito
-    await productDetailPage.clickAddToCart();
-    // Esperar y verificar modal visible
-    await expect(page.locator(productDetailPage.cartModal)).toBeVisible();
-    // Verificar texto en modal:
-    await expect(page.locator(productDetailPage.cartModal)).toContainText('added to your cart');
+     // 6. Paso 5: Agregar al carrito
+  await productDetailPage.clickAddToCart();
+  await expect(page.locator(productDetailPage.cartModal)).toBeVisible();
+  await expect(page.locator(productDetailPage.cartModal))
+        .toContainText('Your product has been added to cart');
 
-    // 7. Paso 6: Proceed to checkout
-    await productDetailPage.clickProceedToCheckout();
-    // Validar que se redirige a view_cart o checkout
-    await expect(page).toHaveURL(/view_cart|checkout/);
+  // 7. Paso 6: View Cart (ya lo hace clickProceedToCheckout)
+  await productDetailPage.clickProceedToCheckout();
+  // Ahora esperamos a que la URL sea exactamente /view_cart
+  await expect(page).toHaveURL(/\/view_cart/);
 
-    // 8. Validar que aparece el modal de Register/Login (sin sesión)
-    await expect(page.locator('form[action="/signup"]')).toBeVisible();
+  // 8. Clic en el botón “Proceed To Checkout” que aparece en la página del carrito
+  //    Ese botón normalmente tiene la clase .check_out o un href "/checkout".
+  //    Vamos a esperar a que sea visible y luego clic:
+  const proceedBtn = page.locator('a.check_out'); 
+  // En caso de que tuvieras que usar href, podrías usar: page.locator('a[href="/checkout"]')
+  await proceedBtn.waitFor({ state: 'visible', timeout: 5000 });
+  await proceedBtn.click();
 
-    // FIN DEL FLUJO OBLIGATORIO
+  // 9. Ahora la URL debe ser /checkout
+  await expect(page).toHaveURL(/\/checkout/);
+
+  // 10. Validar que aparece el formulario de registro/login (usuario no autenticado)
+  await expect(page.locator('form[action="/signup"]')).toBeVisible();
+
+  // FIN DEL FLUJO OBLIGATORIO
+
   });
 });
