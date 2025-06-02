@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "test": "npx playwright test",
+  "test:report": "npx playwright show-report"
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.52.0"
+    "@playwright/test": "^1.52.0",
+    "playwright": "^1.52.0"
   },
   "dependencies": {
     "faker": "^6.6.6"
