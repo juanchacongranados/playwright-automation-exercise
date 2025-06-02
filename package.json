@@ -1,0 +1,25 @@
+{
+  "name": "playwright-automation-exercise",
+  "version": "1.0.0",
+  "description": "Ejercicio QA Automation con Playwright para clothing store.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-juanchacongranados:juanchacongranados/playwright-automation-exercise.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  },
+  "dependencies": {
+    "faker": "^6.6.6"
+  }
+}
