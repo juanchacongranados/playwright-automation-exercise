@@ -4,8 +4,10 @@ const BasePage = require('./BasePage');
 class ProductsPage extends BasePage {
   constructor(page) {
     super(page);
-    this.productGrid = '.features_items .col-sm-4';
-    this.viewProductButton = '.choose > a';
+    // 1) Ubica el contenedor principal de productos
+    this.productCardSelector = '.features_items > .col-sm-4';
+    // 2) Dentro de cada card, el botón “View Product” puede coincidir con este texto
+    this.viewProductButtonSelector = 'a:has-text("View Product")';
   }
 
   /**
@@ -13,14 +15,22 @@ class ProductsPage extends BasePage {
    * @param {number} index — índice (1,2,3…)
    */
   async clickViewProductByIndex(index) {
-    // Esperar a que al menos un producto esté renderizado en el grid:
-    await this.page.waitForSelector(this.productGrid);
+    // Esperar a que cargue al menos una card
+    await this.page.waitForSelector(this.productCardSelector);
 
-    // Con locator(), agarramos el conjunto de todos los elementos que coinciden con this.productGrid,
-    // luego con .nth(index - 1) seleccionamos el que queremos (index-1 porque nth() es 0-based),
-    // y dentro de ese elemento, en lugar de pasar un string CSS con índice, volvemos a usar locator() para el botón:
-    const productCard = this.page.locator(this.productGrid).nth(index - 1);
-    await productCard.locator(this.viewProductButton).click();
+    // 1) Tomamos todos los elementos que cumplen ".features_items > .col-sm-4"
+    const allCards = this.page.locator(this.productCardSelector);
+
+    // 2) Seleccionamos el N-ésimo (index-1 porque .nth es 0-based)
+    const productCard = allCards.nth(index - 1);
+
+    // 3) Dentro de esa card, hacemos clic en "View Product"
+    //    Ubicamos la etiqueta <a> que tenga texto "View Product"
+    const viewBtn = productCard.locator(this.viewProductButtonSelector);
+
+    // 4) Esperar a que el botón sea visible y clickeable
+    await viewBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await viewBtn.click();
   }
 }
 
