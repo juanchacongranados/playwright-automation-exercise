@@ -1,9 +1,10 @@
-# Node modules
+# Dependencias y artefactos de Node
 node_modules/
 
-# Reportes de Playwright
+# Reportes y resultados de Playwright
 playwright-report/
 test-results/
 
-# Archivos de entorno
+# Otros artefactos temporales (opcional)
+.DS_Store
 .env
