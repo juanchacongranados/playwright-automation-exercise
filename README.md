@@ -23,9 +23,19 @@ npx playwright install
 ```
 .
 ├── pages/                 # Page Objects (POM)
+│   ├── BasePage.js
+│   ├── HomePage.js
+│   ├── ProductsPage.js
+│   ├── ProductDetailPage.js
+│   └── CheckoutPage.js
 ├── tests/                 # Pruebas Playwright
+│   ├── sanity.spec.js
+│   └── purchase-flow.spec.js
 ├── utils/                 # Helpers (Faker, Lighthouse)
+│   ├── fakerHelper.js
+│   └── lighthouseHelper.js 
 ├── testcases/             # Documento de diseño PurchaseFlow.md
+│   └── PurchaseFlow.md
 ├── node_modules/
 ├── playwright.config.js   # Configuración de Playwright (Desktop + Mobile)
 ├── package.json
