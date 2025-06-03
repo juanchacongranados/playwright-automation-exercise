@@ -1,18 +1,21 @@
 // pages/CheckoutPage.js
 
-const BasePage = require('./BasePage');
+import BasePage from './BasePage.js';
 
-class CheckoutPage extends BasePage {
+export default class CheckoutPage extends BasePage {
+  /**
+   * @param {import('@playwright/test').Page} page
+   */
   constructor(page) {
     super(page);
 
-    // Selectores para la pantalla de registro extenso (tras hacer click en "Register / Login")
+    // 1) “New User Signup!” (nombre y email)
     this.signupNameInput       = 'input[data-qa="signup-name"]';
     this.signupEmailInput      = 'input[data-qa="signup-email"]';
     this.signupButton          = 'button[data-qa="signup-button"]';
-    // Formulario “Create Account” completo
+
+    // 2) “Enter Account Information” (Create Account)
     this.titleMrRadio          = '#id_gender1';
-    this.titleMrsRadio         = '#id_gender2';
     this.passwordInput         = 'input[data-qa="password"]';
     this.dayDropdown           = 'select[data-qa="days"]';
     this.monthDropdown         = 'select[data-qa="months"]';
@@ -27,137 +30,133 @@ class CheckoutPage extends BasePage {
     this.mobileNumberInput     = 'input[data-qa="mobile_number"]';
     this.createAccountButton   = 'button[data-qa="create-account"]';
 
-    // Selectores para la página de carrito (ya logueados)
-    this.placeOrderButton      = 'a[href="/payment"]';
+    // 3) “Account Created!” y “Continue”
+    this.accountCreatedText    = 'text=Account Created!';
+    this.continueButton        = 'a:has-text("Continue")';
 
-    // Selectores para la página de pago (“Payment”)
-    this.nameOnCardInput       = 'input[data-qa="name-on-card"]';
-    this.cardNumberInput       = 'input[data-qa="card-number"]';
-    this.cvcInput              = 'input[data-qa="cvc"]';
-    this.expirationMonthInput  = 'input[data-qa="expiry-month"]';
-    this.expirationYearInput   = 'input[data-qa="expiry-year"]';
-    this.payAndConfirmButton   = 'button#submit'; // ID real en Payment
+    // 4) Ir al carrito desde el menú
+    this.cartLink              = 'a[href="/view_cart"]';
 
-    // Selectores para la página de “Order Placed!”
+    // 5) En /view_cart → “Proceed To Checkout” (navega a /checkout)
+    this.proceedToCheckoutBtn  = 'a[href="/checkout"], a.check_out';
+
+    // 6) En /checkout → “Place Order” (navega a /payment)
+    this.placeOrderButton      = 'a:has-text("Place Order")';
+
+    // 7) Campos de pago en /payment
+    this.nameOnCardInput       = 'input[name="name_on_card"]';
+    this.cardNumberInput       = 'input[name="card_number"]';
+    this.cvcInput              = 'input[name="cvc"]';
+    this.expirationMonthInput  = 'input[name="expiry_month"]';
+    this.expirationYearInput   = 'input[name="expiry_year"]';
+    this.payAndConfirmButton   = 'button:has-text("Pay and Confirm Order")';
+
+    // 8) “Order Placed!”
     this.orderConfirmationText = 'h2:has-text("Order Placed!")';
 
-    // Selector para Logout (aparece en el menú superior tras login)
-    this.logoutLink            = 'a:has-text("Logout")';
+    // 9) “Logout” en el menú superior
+    this.logoutLink            = 'text=Logout';
   }
 
   /**
-   * 7. Registrar nuevo usuario con datos Faker.
-   *    name/email son los primeros campos que aparecen.
+   * Paso 7: Registrar nuevo usuario usando Faker
+   * @param {string} name
+   * @param {string} email
+   * @param {string} password
+   * @param {string} firstName
+   * @param {string} lastName
+   * @param {string} address
+   * @param {string} state
+   * @param {string} city
+   * @param {string} zipcode
+   * @param {string} mobile
    */
   async registerNewUser(name, email, password, firstName, lastName, address, state, city, zipcode, mobile) {
-    // 1) Llenar “New User Signup!” (name + email)
+    // 1) “New User Signup!”: nombre y correo
     await this.page.fill(this.signupNameInput, name);
     await this.page.fill(this.signupEmailInput, email);
     await this.page.click(this.signupButton);
 
-    // 2) Esperar a que aparezca el formulario “Enter Account Information”
-    await this.page.waitForSelector(this.titleMrRadio, { timeout: 5000 });
+    // 2) Esperar formulario “Enter Account Information”
+    await this.page.waitForSelector(this.titleMrRadio, { timeout: 10000 });
 
-    // 3) Llenar el formulario completo
-    // a) Seleccionar título (tomaremos siempre “Mr.” para simplificar)
+    // 3) Completar detalles:
     await this.page.check(this.titleMrRadio);
-    // b) Contraseña
     await this.page.fill(this.passwordInput, password);
-    // c) Fecha de nacimiento (anclamos valores fijos, p. ej. 1 / enero / 1990)
     await this.page.selectOption(this.dayDropdown, '1');
     await this.page.selectOption(this.monthDropdown, '1');
     await this.page.selectOption(this.yearDropdown, '1990');
-
-    // d) Nombres y apellidos
     await this.page.fill(this.firstNameInput, firstName);
     await this.page.fill(this.lastNameInput, lastName);
-
-    // e) Dirección completa
     await this.page.fill(this.addressInput, address);
-    await this.page.selectOption(this.countryDropdown, 'United States'); // Ajusta si necesitas otro
+    await this.page.selectOption(this.countryDropdown, 'United States');
     await this.page.fill(this.stateInput, state);
     await this.page.fill(this.cityInput, city);
     await this.page.fill(this.zipcodeInput, zipcode);
     await this.page.fill(this.mobileNumberInput, mobile);
 
-    // f) Crear cuenta
+    // 4) Hacer clic en “Create Account”
     await this.page.click(this.createAccountButton);
 
-    // 4) Esperar a que redirija a la página de “Account Created!” o directamente al carrito
-    //    En este sitio, tras crear cuenta, redirige al “My Account” con mensaje de éxito.
-    //    Luego tienes que hacer clic en “Continue” (automaticamente redirige al Home),
-    //    y luego ir a “Cart” para volver al flujo. Para simplificar, asume que tras 
-    //    crear cuenta ya quedamos logueados y lista la sesión activa.
-    await this.page.waitForSelector('text=Account Created!', { timeout: 5000 });
-    // Hacer clic en “Continue”
-    await this.page.click('a:has-text("Continue")');
-    // Espera a que redirija al Home
-    await this.page.waitForURL('https://automationexercise.com/');
+    // 5) Esperar “Account Created!” y hacer clic en “Continue”
+    await this.page.waitForSelector(this.accountCreatedText, { timeout: 10000 });
+    await this.page.click(this.continueButton);
+
+    // 6) Esperar a que redirija al home (usuario ya logueado)
+    await this.page.waitForURL('https://automationexercise.com/', { timeout: 10000 });
   }
 
   /**
-   * 8. Desde Home (ya logueado), navegar a Cart directamente,
-   *    o bien, click en “Cart” del menú superior para ir a /view_cart.
+   * Paso 8: Ir al carrito (/view_cart) desde el menú superior
    */
   async goToCart() {
-    await this.page.click('a[href="/view_cart"]');
-    await this.page.waitForURL(/\/view_cart/);
+    await this.page.click(this.cartLink);
+    await this.page.waitForURL(/\/view_cart/, { timeout: 10000 });
   }
 
   /**
-   * 8. Confirmar la orden. En /view_cart, hacer clic en “Proceed To Checkout”,
-   *    pero esta vez, como ya estamos logueados, simplemente pasaremos a /payment.
+   * Paso 8 (continuación): En /view_cart, hacer clic en “Proceed To Checkout”
+   * para llegar a /checkout, y luego clic en “Place Order” para ir a /payment
    */
   async confirmOrder() {
-    // Click en “Proceed To Checkout”
-    const proceedBtn = this.page.locator('a.check_out');
-    await proceedBtn.waitFor({ state: 'visible', timeout: 5000 });
-    await Promise.all([
-      this.page.waitForURL(/\/checkout/),
-      proceedBtn.click(),
-    ]);
+    // 1) Click “Proceed To Checkout”
+    const proceedBtn = this.page.locator(this.proceedToCheckoutBtn);
+    await proceedBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await proceedBtn.click();
 
-    // Ahora estamos en /checkout; en esta página hay un botón “Place Order” 
-    // (que es <a href="/payment">Place Order</a>)
-    await this.page.waitForSelector(this.placeOrderButton, { timeout: 5000 });
-    await Promise.all([
-      this.page.waitForURL(/\/payment/),
-      this.page.click(this.placeOrderButton),
-    ]);
+    // 2) Ahora en /checkout, esperar y hacer clic en “Place Order”
+    await this.page.waitForSelector(this.placeOrderButton, { timeout: 10000 });
+    await this.page.click(this.placeOrderButton);
+
+    // 3) Esperar a que cargue el formulario de pago (campo name_on_card)
+    await this.page.waitForSelector(this.nameOnCardInput, { timeout: 10000 });
   }
 
   /**
-   * 8.1. En la página de página de pago (/payment), llenar datos de tarjeta y confirmar.
+   * Paso 12: Llenar datos de tarjeta en /payment y confirmar
+   * @param {string} cardName
+   * @param {string} cardNumber
+   * @param {string} cvc
+   * @param {string} expMonth
+   * @param {string} expYear
    */
   async fillPaymentDetailsAndPlaceOrder(cardName, cardNumber, cvc, expMonth, expYear) {
-    // Esperar a que cargue el formulario de pago
-    await this.page.waitForSelector(this.nameOnCardInput, { timeout: 5000 });
-
-    // Llenar datos de tarjeta
     await this.page.fill(this.nameOnCardInput, cardName);
     await this.page.fill(this.cardNumberInput, cardNumber);
     await this.page.fill(this.cvcInput, cvc);
     await this.page.fill(this.expirationMonthInput, expMonth);
     await this.page.fill(this.expirationYearInput, expYear);
-
-    // Hacer clic en “Pay and Confirm Order”
     await this.page.click(this.payAndConfirmButton);
-
-    // Esperar a que aparezca el mensaje “Order Placed!”
-    await this.page.waitForSelector(this.orderConfirmationText, { timeout: 5000 });
+    await this.page.waitForSelector(this.orderConfirmationText, { timeout: 10000 });
   }
 
   /**
-   * 9. Hacer clic en “Logout” desde el menú superior.
+   * Paso 13: Hacer logout y esperar a que vuelva al home
    */
   async logout() {
-    // El enlace “Logout” aparece en el header tras loguearse
     const logoutBtn = this.page.locator(this.logoutLink);
-    await logoutBtn.waitFor({ state: 'visible', timeout: 5000 });
+    await logoutBtn.waitFor({ state: 'visible', timeout: 10000 });
     await logoutBtn.click();
-    // Verificamos que volvimos a la Home sin sesión
-    await this.page.waitForURL('https://automationexercise.com/');
+    await this.page.waitForURL(/https:\/\/automationexercise\.com(\/|\/index\.html)?/, {timeout: 10000});
   }
 }
-
-module.exports = CheckoutPage;

@@ -1,6 +1,7 @@
 {
   "name": "playwright-automation-exercise",
   "version": "1.0.0",
+  "type": "module",
   "description": "Ejercicio QA Automation con Playwright para clothing store.",
   "main": "index.js",
   "directories": {

@@ -1,37 +1,38 @@
 // pages/ProductsPage.js
-const BasePage = require('./BasePage');
 
-class ProductsPage extends BasePage {
+import BasePage from './BasePage.js';
+
+export default class ProductsPage extends BasePage {
+  /**
+   * @param {import('@playwright/test').Page} page
+   */
   constructor(page) {
     super(page);
-    // 1) Ubica el contenedor principal de productos
-    this.productCardSelector = '.features_items > .col-sm-4';
-    // 2) Dentro de cada card, el botón “View Product” puede coincidir con este texto
-    this.viewProductButtonSelector = 'a:has-text("View Product")';
+    // Cada “card” de producto en la lista
+    this.productGrid = '.features_items .col-sm-4';
   }
 
   /**
-   * Haz clic en “View Product” del producto en la posición `index` (1-based).
-   * @param {number} index — índice (1,2,3…)
+   * Hace clic en “View Product” del producto en la posición `index` (1-based).
+   * @param {number} index
    */
   async clickViewProductByIndex(index) {
-    // Esperar a que cargue al menos una card
-    await this.page.waitForSelector(this.productCardSelector);
+    // 1) Esperar a que haya al menos un producto en pantalla
+    await this.page.waitForSelector(this.productGrid, { timeout: 10000 });
 
-    // 1) Tomamos todos los elementos que cumplen ".features_items > .col-sm-4"
-    const allCards = this.page.locator(this.productCardSelector);
+    // 2) Seleccionar la tarjeta del producto (índice 0-based en Playwright)
+    const productCard = this.page.locator(this.productGrid).nth(index - 1);
 
-    // 2) Seleccionamos el N-ésimo (index-1 porque .nth es 0-based)
-    const productCard = allCards.nth(index - 1);
+    // 3) Hacer scroll (en caso de que esté parcialmente fuera de pantalla)
+    await productCard.scrollIntoViewIfNeeded();
 
-    // 3) Dentro de esa card, hacemos clic en "View Product"
-    //    Ubicamos la etiqueta <a> que tenga texto "View Product"
-    const viewBtn = productCard.locator(this.viewProductButtonSelector);
+    // 4) Dentro de esa tarjeta, localizar el enlace “View Product” por texto
+    const viewBtn = productCard.locator('a:has-text("View Product")');
 
-    // 4) Esperar a que el botón sea visible y clickeable
-    await viewBtn.waitFor({ state: 'visible', timeout: 5000 });
+    // 5) Esperar a que el “View Product” sea visible antes de hacer clic
+    await viewBtn.waitFor({ state: 'visible', timeout: 10000 });
+
+    // 6) Finalmente, clic en “View Product”
     await viewBtn.click();
   }
 }
-
-module.exports = ProductsPage;
